@@ -3,6 +3,8 @@ Yii 2 Advanced API Project Template
 
 Another Yii2 advanced template that add API application folder in the user.
 
+This template uses http://asset-packagist.org as asset dependency manager. Therefore, we won't need to install `fxp/composer-asset-plugin`. Why? Because fxp plugin is so slow.
+
 DIRECTORY STRUCTURE
 -------------------
 

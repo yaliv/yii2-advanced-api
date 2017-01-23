@@ -10,8 +10,15 @@ return [
   'id'                  => 'app-api',
   'basePath'            => dirname(__DIR__),
   'controllerNamespace' => 'backend\controllers',
-  'bootstrap'           => ['log'],
-  'modules'             => [],
+  'bootstrap'           => [
+    'log',
+    'v1'
+  ],
+  'modules'             => [
+    'v1' => [
+      'class' => 'api\modules\v1\Module'   // here is our v1 modules
+    ]
+  ],
   'components'          => [
     'request'      => [
       // no need CSRF token
@@ -34,14 +41,10 @@ return [
     'errorHandler' => [
       'errorAction' => 'site/error',
     ],
-    /*
     'urlManager' => [
-        'enablePrettyUrl' => true,
-        'showScriptName' => false,
-        'rules' => [
-        ],
+      // to improve the security
+      'enableStrictParsing' => true
     ],
-    */
   ],
   'params'              => $params,
 ];

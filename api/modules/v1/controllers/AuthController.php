@@ -10,6 +10,15 @@ use yii\rest\Controller;
  * @author Haqqi <me@haqqi.net>
  */
 class AuthController extends Controller {
+  public function behaviors() {
+    $behaviors = parent::behaviors();
+
+    $behaviors['authenticator']['except'] = [
+      'login', 'forgot-password', 'reset-password', 'register'
+    ];
+
+    return $behaviors;
+  }
 
   protected function verbs() {
     return [

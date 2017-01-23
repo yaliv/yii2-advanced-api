@@ -25,7 +25,7 @@ return [
       'enableCsrfValidation' => false,
     ],
     'user'         => [
-      'identityClass'   => 'common\models\User',
+      'identityClass'   => 'api\models\User',
       'enableAutoLogin' => false,
       'enableSession' => false
     ],

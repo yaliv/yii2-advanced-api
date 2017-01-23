@@ -7,8 +7,9 @@
     "license": "BSD-3-Clause",
     "minimum-stability": "stable",
     "require": {
+        "oomphinc/composer-installers-extender": "*",
         "php": ">=5.4.0",
-        "yiisoft/yii2": "~2.0.6",
+        "yiisoft/yii2": "~2.0.10",
         "yiisoft/yii2-bootstrap": "~2.0.0",
         "yiisoft/yii2-swiftmailer": "~2.0.0"
     },
@@ -30,9 +31,10 @@
         "process-timeout": 1800
     },
     "extra": {
-        "asset-installer-paths": {
-            "npm-asset-library": "vendor/npm",
-            "bower-asset-library": "vendor/bower"
+        "installer-types": ["library"],
+        "installer-paths": {
+            "vendor/bower/{$name}/": ["vendor:bower-asset"],
+            "vendor/npm/{$name}/": ["vendor:npm-asset"]
         }
     },
     "scripts": {

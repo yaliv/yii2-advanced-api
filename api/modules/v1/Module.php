@@ -3,6 +3,11 @@
 namespace api\modules\v1;
 use yii\base\BootstrapInterface;
 
+/**
+ * Class Module
+ * @package api\modules\v1
+ * @author Haqqi <me@haqqi.net>
+ */
 class Module extends \yii\base\Module implements BootstrapInterface {
   public function init() {
     parent::init();

@@ -7,6 +7,27 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\db\Expression;
 
+/**
+ * Class Device
+ * @package common\models
+ * @author Haqqi <me@haqqi.net>
+ * 
+ * @property string $accessToken
+ * @property int $osType
+ * @property string $osVersion
+ * @property string $identifier
+ * @property string $model
+ * @property string $appVersion
+ * @property double $latitude
+ * @property double $longitude
+ * @property string $ip
+ * @property string $timezone
+ * @property string $status
+ * @property string $createdAt
+ * @property string $updatedAt
+ * 
+ * @property User $user
+ */
 class Device extends ActiveRecord {
 
   const SCENARIO_CREATE      = 'create';

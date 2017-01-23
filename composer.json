@@ -18,6 +18,8 @@
         "yiisoft/yii2-gii": "~2.0.0",
         "yiisoft/yii2-faker": "~2.0.0",
 
+        "firephp/firephp-core": "dev-master",
+
         "codeception/base": "^2.2.3",
         "codeception/verify": "~0.3.1"
     },

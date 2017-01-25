@@ -3,10 +3,11 @@
 namespace api\modules\v1\controllers;
 
 use api\config\ApiCode;
+use api\forms\LoginForm;
 use api\forms\RegisterUserForm;
 use common\exceptions\BetterHttpException;
+use common\models\User;
 use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
 use yii\rest\Controller;
 use yii\web\HttpException;
 
@@ -77,7 +78,35 @@ class AuthController extends Controller
 
     public function actionLogin()
     {
-        return [];
+        try {
+            $loginForm = new LoginForm(\Yii::$app->request->headers->get('X-Device-identifier'));
+        } catch (InvalidConfigException $e) {
+            throw new HttpException(400, $e->getMessage(), ApiCode::DEVICE_IDENTIFIER_NOT_FOUND);
+        }
+
+        $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN);
+        $loginForm->load(\Yii::$app->request->post(), 'User');
+
+        if ($loginForm->login()) {
+            /**
+             * @var $user User
+             */
+            $user = \Yii::$app->user->getIdentity();
+
+            return [
+              'name'    => 'Success',
+              'message' => 'Login with email ' . $user->email . ' success',
+              'code'    => ApiCode::LOGIN_SUCCESS,
+              'status'  => 200,
+              'data'    => $user->toArray([
+                'username',
+                'email'
+              ])
+            ];
+        } else {
+            throw new BetterHttpException(401, 'Login Failed', ['User' => $loginForm->getErrors()],
+              ApiCode::LOGIN_FAILED);
+        }
     }
 
     public function actionForgotPassword()

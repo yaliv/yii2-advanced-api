@@ -65,8 +65,8 @@ class AuthController extends Controller
               'code'    => ApiCode::REGISTER_SUCCESS,
               'status'  => 200,
               'data'    => $user->toArray([
-                  'username',
-                  'email',
+                'username',
+                'email',
               ])
             ];
         }
@@ -101,6 +101,8 @@ class AuthController extends Controller
               'data'    => $user->toArray([
                 'username',
                 'email'
+              ], [
+                'activeDevice'
               ])
             ];
         } else {

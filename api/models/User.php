@@ -13,6 +13,18 @@ class User extends \common\models\User
      */
     private $_activeDevice;
 
+    public function extraFields() {
+        $extra = parent::extraFields();
+
+        $extra['activeDevice'] = function () {
+            return $this->getActiveDevice()->toArray([
+              'accessToken'
+            ]);
+        };
+
+        return $extra;
+    }
+
     /**
      * Setup a new device after login
      */

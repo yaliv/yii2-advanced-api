@@ -39,7 +39,7 @@ return [
             ],
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
+            'class' => \common\components\ErrorHandler::className(),
         ],
         'urlManager'   => [
             // to improve the security

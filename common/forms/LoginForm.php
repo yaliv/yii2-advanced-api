@@ -123,24 +123,18 @@ class LoginForm extends Model
         return false;
     }
 
-    private function findUser()
-    {
-        $class = $this->_userClass;
-        if ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME) {
-            return $class::findByUsername($this->username);
-        }
-
-        return $this->_user = $class::findByEmail($this->email);
-    }
-
     /**
      * @return User|null
      */
     protected function getUser()
     {
         if ($this->_user === null) {
+            $class = $this->_userClass;
+            if ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME) {
+                return $class::findByUsername($this->username);
+            }
 
-            $this->_user = $this->findUser();
+            return $this->_user = $class::findByEmail($this->email);
         }
 
         return $this->_user;

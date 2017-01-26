@@ -53,10 +53,11 @@ class LoginForm extends Model
         return [
             [['email', 'password'], 'required','on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
             [['username', 'password'], 'required','on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-            [['email', 'password'], 'trim'],
+            [['email', 'password','username'], 'trim'],
             ['email', 'email'],
             ['email', 'exist', 'targetClass' => $this->_userClass, 'message' => 'Email / user does not exist'],
             ['email', 'validateActive','on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
+            ['username', 'validateActive','on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
             ['password', 'validatePassword']
         ];
     }
@@ -65,7 +66,8 @@ class LoginForm extends Model
     {
         if (!$this->hasErrors()) {
             if (!$this->getUser()->validatePassword($this->{$attribute})) {
-                $this->addError($attribute, 'Incorrect password');
+                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username' ;
+                $this->addError($attribute, 'Incorrect '.$field.' or password.');
             }
         }
     }
@@ -74,7 +76,8 @@ class LoginForm extends Model
     {
         if (!$this->hasErrors()) {
             if ($this->getUser()->status !== User::STATUS_ACTIVE) {
-                $this->addError($attribute, 'User is not active or being suspended');
+                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username' ;
+                $this->addError($attribute, 'User '.$field.' is being suspended');
             }
         }
     }
@@ -83,6 +86,8 @@ class LoginForm extends Model
     {
         $scenarios                              = parent::scenarios();
         $scenarios[self::SCENARIO_SUBMIT_LOGIN_EMAIL] = ['email', 'password'];
+        $scenarios[self::SCENARIO_SUBMIT_LOGIN_USERNAME] = ['username', 'password'];
+
         return $scenarios;
     }
 
@@ -109,9 +114,9 @@ class LoginForm extends Model
     private function findUser()
     {
         $class = $this->_userClass;
-//        if (!($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME)) {
-//            return User::findByUsername($this->username);
-//        }
+        if ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME) {
+            return $class::findByUsername($this->username);
+        }
 
         return $this->_user = $class::findByEmail($this->email);
     }
@@ -122,11 +127,6 @@ class LoginForm extends Model
     protected function getUser()
     {
         if ($this->_user === null) {
-            // get user class
-//            $class = $this->_userClass;
-//
-//            // find one
-//            $this->_user = $class::findOne(['email' => $this->email]);
 
             $this->_user = $this->findUser();
         }

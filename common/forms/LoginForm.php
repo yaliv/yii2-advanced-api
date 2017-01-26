@@ -31,7 +31,6 @@ class LoginForm extends Model
     public $password;
 
 
-
     /**
      * @var User
      */
@@ -51,14 +50,27 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            [['email', 'password'], 'required','on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
-            [['username', 'password'], 'required','on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-            [['email', 'password','username'], 'trim'],
-            ['email', 'email'],
-            ['email', 'exist', 'targetClass' => $this->_userClass, 'message' => 'Email / user does not exist'],
-            ['email', 'validateActive','on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
-            ['username', 'validateActive','on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-            ['password', 'validatePassword']
+          [['email', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
+          [['username', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
+          [['email', 'password', 'username'], 'trim'],
+          ['email', 'email'],
+          [
+            'email',
+            'exist',
+            'targetClass' => $this->_userClass,
+            'on'          => self::SCENARIO_SUBMIT_LOGIN_EMAIL,
+            'message'     => 'Email / user does not exist'
+          ],
+          [
+            'username',
+            'exist',
+            'targetClass' => $this->_userClass,
+            'on'          => self::SCENARIO_SUBMIT_LOGIN_USERNAME,
+            'message'     => 'Email / user does not exist'
+          ],
+          ['email', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
+          ['username', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
+          ['password', 'validatePassword']
         ];
     }
 
@@ -66,8 +78,8 @@ class LoginForm extends Model
     {
         if (!$this->hasErrors()) {
             if (!$this->getUser()->validatePassword($this->{$attribute})) {
-                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username' ;
-                $this->addError($attribute, 'Incorrect '.$field.' or password.');
+                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username';
+                $this->addError($attribute, 'Incorrect ' . $field . ' or password.');
             }
         }
     }
@@ -76,16 +88,16 @@ class LoginForm extends Model
     {
         if (!$this->hasErrors()) {
             if ($this->getUser()->status !== User::STATUS_ACTIVE) {
-                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username' ;
-                $this->addError($attribute, 'User '.$field.' is being suspended');
+                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username';
+                $this->addError($attribute, 'User ' . $field . ' is being suspended');
             }
         }
     }
 
     public function scenarios()
     {
-        $scenarios                              = parent::scenarios();
-        $scenarios[self::SCENARIO_SUBMIT_LOGIN_EMAIL] = ['email', 'password'];
+        $scenarios                                       = parent::scenarios();
+        $scenarios[self::SCENARIO_SUBMIT_LOGIN_EMAIL]    = ['email', 'password'];
         $scenarios[self::SCENARIO_SUBMIT_LOGIN_USERNAME] = ['username', 'password'];
 
         return $scenarios;

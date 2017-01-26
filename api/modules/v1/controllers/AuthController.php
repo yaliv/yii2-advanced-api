@@ -84,9 +84,18 @@ class AuthController extends Controller
             throw new HttpException(400, $e->getMessage(), ApiCode::DEVICE_IDENTIFIER_NOT_FOUND);
         }
 
-        $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN);
-        $loginForm->load(\Yii::$app->request->post(), 'User');
+        $loginWithEmail = true;
 
+        if ($loginWithEmail) {
+            $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_EMAIL);
+        } else {
+            $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_USERNAME);
+        }
+
+        $loginForm->load(\Yii::$app->request->post(), 'User');
+        /*
+             * Try to login
+             */
         if ($loginForm->login()) {
             /**
              * @var $user User
@@ -99,16 +108,20 @@ class AuthController extends Controller
               'code'    => ApiCode::LOGIN_SUCCESS,
               'status'  => 200,
               'data'    => $user->toArray([
-                'username',
-                'email'
+                  // main fields
+                  'hashId',
+                  'username',
+                  'email'
               ], [
-                'activeDevice'
+                  // extra fields
+                  'activeDevice'
               ])
             ];
         } else {
             throw new BetterHttpException(401, 'Login Failed', ['User' => $loginForm->getErrors()],
               ApiCode::LOGIN_FAILED);
         }
+
     }
 
     public function actionForgotPassword()

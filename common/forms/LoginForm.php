@@ -13,15 +13,24 @@ use yii\base\Model;
 class LoginForm extends Model
 {
 
-    const SCENARIO_SUBMIT_LOGIN = 'submitLogin';
+    const SCENARIO_SUBMIT_LOGIN_USERNAME = 'submitLoginUsername';
+    const SCENARIO_SUBMIT_LOGIN_EMAIL    = 'submitLoginEmail';
     /**
      * @var
      */
     public $email;
+
+    /**
+     * @var
+     */
+    public $username;
+
     /**
      * @var
      */
     public $password;
+
+
 
     /**
      * @var User
@@ -42,11 +51,12 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            [['email', 'password'], 'required'],
+            [['email', 'password'], 'required','on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
+            [['username', 'password'], 'required','on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
             [['email', 'password'], 'trim'],
             ['email', 'email'],
             ['email', 'exist', 'targetClass' => $this->_userClass, 'message' => 'Email / user does not exist'],
-            ['email', 'validateActive'],
+            ['email', 'validateActive','on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
             ['password', 'validatePassword']
         ];
     }
@@ -72,7 +82,7 @@ class LoginForm extends Model
     public function scenarios()
     {
         $scenarios                              = parent::scenarios();
-        $scenarios[self::SCENARIO_SUBMIT_LOGIN] = ['email', 'password'];
+        $scenarios[self::SCENARIO_SUBMIT_LOGIN_EMAIL] = ['email', 'password'];
         return $scenarios;
     }
 
@@ -96,6 +106,16 @@ class LoginForm extends Model
         return false;
     }
 
+    private function findUser()
+    {
+        $class = $this->_userClass;
+//        if (!($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME)) {
+//            return User::findByUsername($this->username);
+//        }
+
+        return $this->_user = $class::findByEmail($this->email);
+    }
+
     /**
      * @return User|null
      */
@@ -103,10 +123,12 @@ class LoginForm extends Model
     {
         if ($this->_user === null) {
             // get user class
-            $class = $this->_userClass;
+//            $class = $this->_userClass;
+//
+//            // find one
+//            $this->_user = $class::findOne(['email' => $this->email]);
 
-            // find one
-            $this->_user = $class::findOne(['email' => $this->email]);
+            $this->_user = $this->findUser();
         }
 
         return $this->_user;

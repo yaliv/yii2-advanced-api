@@ -15,6 +15,11 @@ class LoginForm extends Model
 
     const SCENARIO_SUBMIT_LOGIN_USERNAME = 'submitLoginUsername';
     const SCENARIO_SUBMIT_LOGIN_EMAIL    = 'submitLoginEmail';
+
+    const LOGIN_WITH_EMAIL    = 'email';
+    const LOGIN_WITH_USERNAME = 'username';
+    const LOGIN_WITH_BOTH     = 'both';
+
     /**
      * @var
      */

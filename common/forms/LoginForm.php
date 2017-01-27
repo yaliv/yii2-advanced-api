@@ -59,14 +59,14 @@ class LoginForm extends Model
             'exist',
             'targetClass' => $this->_userClass,
             'on'          => self::SCENARIO_SUBMIT_LOGIN_EMAIL,
-            'message'     => 'Email / user does not exist'
+            'message'     => 'Email does not exist'
           ],
           [
             'username',
             'exist',
             'targetClass' => $this->_userClass,
             'on'          => self::SCENARIO_SUBMIT_LOGIN_USERNAME,
-            'message'     => 'Email / user does not exist'
+            'message'     => 'User does not exist'
           ],
           ['email', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
           ['username', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],

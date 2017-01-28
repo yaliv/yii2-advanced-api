@@ -4,7 +4,8 @@ namespace api\config;
 
 use yii\base\Object;
 
-class ApiCode extends Object {
+class ApiCode extends Object
+{
     /**
      * ApiCode for auth
      */
@@ -12,10 +13,10 @@ class ApiCode extends Object {
     const REGISTER_FAILED  = 11;
     const LOGIN_SUCCESS    = 12;
     const LOGIN_FAILED     = 13;
+    const LOGOUT_SUCCESS   = 14;
 
     /**
      * ApiCode for invalid configuration
      */
     const DEVICE_IDENTIFIER_NOT_FOUND = 100;
-
 }

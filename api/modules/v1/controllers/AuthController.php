@@ -95,9 +95,9 @@ class AuthController extends Controller
             throw new HttpException(400, $e->getMessage(), ApiCode::DEVICE_IDENTIFIER_NOT_FOUND);
         }
 
-        $loginWithEmail = \Yii::$app->params['loginWithEmail'];
+        $loginByEmail = \Yii::$app->params['loginByEmail'];
 
-        if ($loginWithEmail) {
+        if ($loginByEmail) {
             $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_EMAIL);
         } else {
             $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_USERNAME);

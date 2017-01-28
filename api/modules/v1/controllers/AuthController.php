@@ -44,10 +44,15 @@ class AuthController extends Controller
         ];
     }
 
+    /**
+     * Register user through API.
+     *
+     * @return array of success response.
+     * @throws BetterHttpException if the user failed to register.
+     */
     public function actionRegister()
     {
         try {
-            // registration primary form. no need to login!!
             $userForm = new RegisterUserForm(\Yii::$app->request->headers->get('X-Device-identifier'));
         } catch (InvalidConfigException $e) {
             throw new HttpException(400, $e->getMessage(), ApiCode::DEVICE_IDENTIFIER_NOT_FOUND);
@@ -56,26 +61,32 @@ class AuthController extends Controller
         $userForm->load(\Yii::$app->request->post(), 'User');
 
         if ($userForm->validate()) {
-
             $user = $userForm->register();
 
             return [
-              'name'    => 'Success',
-              'message' => 'Registration as User of ' . $user->username . ' success.',
-              'code'    => ApiCode::REGISTER_SUCCESS,
-              'status'  => 200,
-              'data'    => $user->toArray([
-                'username',
-                'email',
-              ])
+                'name'    => 'Success',
+                'message' => 'Registration as user ' . $user->username . ' success.',
+                'code'    => ApiCode::REGISTER_SUCCESS,
+                'status'  => 200,
+                'data'    => $user->toArray([
+                    'username',
+                    'email',
+                ])
             ];
         }
 
         throw new BetterHttpException(400, 'Registration failed.', [
-          'User' => $userForm->getErrors()
+            'User' => $userForm->getErrors()
         ], ApiCode::REGISTER_FAILED);
     }
 
+    /**
+     * Log user in through API. This will create a new device record with active status.
+     * Any device that has same identifier will be deactivated.
+     *
+     * @return array of success response containing accessToken.
+     * @throws BetterHttpException if the user failed to login.
+     */
     public function actionLogin()
     {
         try {
@@ -93,9 +104,10 @@ class AuthController extends Controller
         }
 
         $loginForm->load(\Yii::$app->request->post(), 'User');
+
         /*
-             * Try to login
-             */
+         * Try to login
+         */
         if ($loginForm->login()) {
             /**
              * @var $user User
@@ -103,25 +115,25 @@ class AuthController extends Controller
             $user = \Yii::$app->user->getIdentity();
 
             return [
-              'name'    => 'Success',
-              'message' => 'Login with email ' . $user->email . ' success',
-              'code'    => ApiCode::LOGIN_SUCCESS,
-              'status'  => 200,
-              'data'    => $user->toArray([
-                  // main fields
-                  'hashId',
-                  'username',
-                  'email'
-              ], [
-                  // extra fields
-                  'activeDevice'
-              ])
+                'name'    => 'Success',
+                'message' => 'Login with email ' . $user->email . ' success',
+                'code'    => ApiCode::LOGIN_SUCCESS,
+                'status'  => 200,
+                'data'    => $user->toArray([
+                    // main fields
+                    'hashId',
+                    'username',
+                    'email'
+                ], [
+                    // extra fields
+                    'activeDevice'
+                ])
             ];
         } else {
-            throw new BetterHttpException(401, 'Login Failed', ['User' => $loginForm->getErrors()],
-              ApiCode::LOGIN_FAILED);
+            throw new BetterHttpException(401, 'Login Failed', [
+                'User' => $loginForm->getErrors()
+            ], ApiCode::LOGIN_FAILED);
         }
-
     }
 
     public function actionForgotPassword()

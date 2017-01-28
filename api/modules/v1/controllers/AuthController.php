@@ -6,7 +6,7 @@ use api\config\ApiCode;
 use api\forms\LoginForm;
 use api\forms\RegisterUserForm;
 use common\exceptions\BetterHttpException;
-use common\models\User;
+use common\models\Device;
 use yii\base\InvalidConfigException;
 use yii\rest\Controller;
 use yii\web\HttpException;
@@ -23,10 +23,10 @@ class AuthController extends Controller
         $behaviors = parent::behaviors();
 
         $behaviors['authenticator']['except'] = [
-          'login',
-          'forgot-password',
-          'reset-password',
-          'register'
+            'login',
+            'forgot-password',
+            'reset-password',
+            'register'
         ];
 
         return $behaviors;
@@ -35,19 +35,19 @@ class AuthController extends Controller
     protected function verbs()
     {
         return [
-          'login'           => ['post'],
-          'logout'          => ['post'],
-          'forgot-password' => ['post'],
-          'reset-password'  => ['get', 'post'],
-          'register'        => ['post'],
-          'change-password' => ['post']
+            'login'           => ['post'],
+            'logout'          => ['post'],
+            'forgot-password' => ['post'],
+            'reset-password'  => ['get', 'post'],
+            'register'        => ['post'],
+            'change-password' => ['post']
         ];
     }
 
     /**
      * Register user through API.
      *
-     * @return array of success response.
+     * @return array the success response.
      * @throws BetterHttpException if the user failed to register.
      */
     public function actionRegister()
@@ -84,7 +84,7 @@ class AuthController extends Controller
      * Log user in through API. This will create a new device record with active status.
      * Any device that has same identifier will be deactivated.
      *
-     * @return array of success response containing accessToken.
+     * @return array the success response containing accessToken.
      * @throws BetterHttpException if the user failed to login.
      */
     public function actionLogin()
@@ -138,6 +138,32 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Log user out. This will need accessToken to log in the user via AccessTokenAuth.
+     * The device that the user is using will be deactivated and the token will be invalid to do other request.
+     *
+     * @return array the success response.
+     */
+    public function actionLogout()
+    {
+        /**
+         * @var $user User
+         */
+        $user           = \Yii::$app->user->getIdentity();
+        $device         = $user->getActiveDevice();
+        $device->status = Device::STATUS_INACTIVE;
+        $device->save();
+
+        \Yii::$app->user->logout();
+
+        return [
+            'name'    => 'Success',
+            'message' => 'You have been logged out.',
+            'code'    => ApiCode::LOGOUT_SUCCESS,
+            'status'  => 200,
+        ];
+    }
+
     public function actionForgotPassword()
     {
         return [];
@@ -157,11 +183,6 @@ class AuthController extends Controller
     }
 
     public function actionChangePassword()
-    {
-        return [];
-    }
-
-    public function actionLogout()
     {
         return [];
     }

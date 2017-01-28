@@ -114,9 +114,11 @@ class AuthController extends Controller
              */
             $user = \Yii::$app->user->getIdentity();
 
+            $msgLoginBy = $loginByEmail ? 'email ' . $user->email : 'username ' . $user->username;
+
             return [
                 'name'    => 'Success',
-                'message' => 'Login with email ' . $user->email . ' success',
+                'message' => 'Login by ' . $msgLoginBy . ' success.',
                 'code'    => ApiCode::LOGIN_SUCCESS,
                 'status'  => 200,
                 'data'    => $user->toArray([

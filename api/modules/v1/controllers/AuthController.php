@@ -179,11 +179,10 @@ class AuthController extends Controller
         $ByEmail = \Yii::$app->params['loginByEmail'];
 
         if ($ByEmail) {
-            $forgotForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_EMAIL);
+            $forgotForm->setScenario(ForgotPasswordForm::SCENARIO_FORGOT_LOGIN_EMAIL);
+        } else {
+            $forgotForm->setScenario(ForgotPasswordForm::SCENARIO_FORGOT_LOGIN_USERNAME);
         }
-//        else {
-//            $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_USERNAME);
-//        }
 
         $forgotForm->load(\Yii::$app->request->post(), 'User');
 
@@ -201,6 +200,10 @@ class AuthController extends Controller
                 ];
             }
         }
+
+        throw new BetterHttpException(401, 'Forgot Failed', [
+          'User' => $forgotForm->getErrors()
+        ], ApiCode::FORGOT_PASSWORD_FAILED);
     }
 
     /**

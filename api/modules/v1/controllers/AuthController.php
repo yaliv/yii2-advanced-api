@@ -6,6 +6,7 @@ use api\config\ApiCode;
 use api\forms\LoginForm;
 use api\forms\RegisterUserForm;
 use common\exceptions\BetterHttpException;
+use common\forms\ForgotPasswordForm;
 use common\models\Device;
 use yii\base\InvalidConfigException;
 use yii\rest\Controller;
@@ -164,9 +165,42 @@ class AuthController extends Controller
         ];
     }
 
+    /**
+     * Accept form submission of email. The system will generate passwordResetToken that can be sent via email.
+     *
+     * @return array success response
+     * @throws BetterHttpException if email is not filled
+     * @throws NotFoundHttpException if user is not found from the email
+     */
     public function actionForgotPassword()
     {
-        return [];
+        $forgotForm = new ForgotPasswordForm();
+
+        $ByEmail = \Yii::$app->params['loginByEmail'];
+
+        if ($ByEmail) {
+            $forgotForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_EMAIL);
+        }
+//        else {
+//            $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_USERNAME);
+//        }
+
+        $forgotForm->load(\Yii::$app->request->post(), 'User');
+
+        if ($forgotForm->validate()) {
+            $user = $forgotForm->getUser();
+            $user->generatePasswordResetToken();
+            if ($user->save()) {
+                // @todo: send password reset link to email
+                // for now, just assume that you will create the passwordResetToken and log it to get it for reset password
+                return [
+                  'name'    => 'Success',
+                  'message' => 'Your reset password link has been sent to email ' . $forgotForm->email,
+                  'code'    => ApiCode::FORGOT_PASSWORD_SUCCESS,
+                  'status'  => 200
+                ];
+            }
+        }
     }
 
     /**

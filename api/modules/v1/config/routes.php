@@ -8,7 +8,7 @@ return [
   /* allow only POST */
   'v1/auth/forgot-password'                             => 'v1/auth/forgot-password',
   /* allow GET and POST */
-  'v1/auth/reset-password/<passwordResetToken:[\w\W]+>' => 'v1/auth/reset-password',
+  'v1/auth/reset-password/<resetPasswordToken:[\w\W]+>' => 'v1/auth/reset-password',
   /* allow only POST */
   'v1/auth/change-password'                             => 'v1/auth/change-password',
   /* allow only POST */

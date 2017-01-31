@@ -6,7 +6,9 @@ use api\config\ApiCode;
 use api\forms\LoginForm;
 use api\forms\RegisterUserForm;
 use common\exceptions\BetterHttpException;
+use common\forms\ChangePasswordForm;
 use common\forms\ForgotPasswordForm;
+use common\forms\ResetPasswordForm;
 use common\models\Device;
 use yii\base\InvalidConfigException;
 use yii\rest\Controller;
@@ -210,17 +212,59 @@ class AuthController extends Controller
      * @param $resetPasswordToken
      *
      * This method accept GET and POST method. If it is GET, this
-     * will return the status of token, wheter it is true or false.
+     * will return the status of token, whether it is true or false.
      *
      * @return array
      */
     public function actionResetPassword($resetPasswordToken)
     {
-        return [];
+        try {
+            $passwordForm = new ResetPasswordForm($resetPasswordToken);
+        } catch (InvalidConfigException $e) {
+            throw new HttpException(400, $e->getMessage(), ApiCode::RESET_PASSWORD_TOKEN_INVALID);
+        }
+
+        // this will catch POST request
+        if (\Yii::$app->request->isPost) {
+
+            $passwordForm->load(\Yii::$app->request->post(), 'User');
+
+            if ($passwordForm->validate() && $passwordForm->resetPassword()) {
+                return [
+                  'name'    => 'Success',
+                  'message' => 'You can sign in using new password.',
+                  'code'    => ApiCode::RESET_PASSWORD_SUCCESS,
+                  'status'  => 200,
+                ];
+            }
+            throw new BetterHttpException(400, 'Reset password failed.', ['User' => $passwordForm->getErrors()],
+              ApiCode::FORGOT_PASSWORD_FAILED);
+        }
+
+        return [
+          'name'    => 'Success',
+          'message' => 'Password reset token is valid.',
+          'code'    => ApiCode::RESET_PASSWORD_TOKEN_VALID,
+          'status'  => 200,
+          'data'    => [
+            'resetPasswordToken' => $resetPasswordToken
+          ]
+        ];
     }
 
     public function actionChangePassword()
     {
-        return [];
+        $passwordForm = new ChangePasswordForm();
+        $passwordForm->load(\Yii::$app->request->post(), 'User');
+
+        if ($passwordForm->validate() && $passwordForm->changePassword()) {
+            return [
+              'name'    => 'Success',
+              'message' => 'Change password success.',
+              'code'    => ApiCode::CHANGE_PASSWORD_SUCCESS,
+              'status'  => 200
+            ];
+        }
+        throw new BetterHttpException(400, 'Change password failed', ['User' => $passwordForm->getErrors()], ApiCode::CHANGE_PASSWORD_FAILED);
     }
 }

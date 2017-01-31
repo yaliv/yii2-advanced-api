@@ -6,6 +6,7 @@ use api\config\ApiCode;
 use api\forms\LoginForm;
 use api\forms\RegisterUserForm;
 use common\exceptions\BetterHttpException;
+use common\forms\ChangePasswordForm;
 use common\forms\ForgotPasswordForm;
 use common\forms\ResetPasswordForm;
 use common\models\Device;
@@ -253,6 +254,17 @@ class AuthController extends Controller
 
     public function actionChangePassword()
     {
-        return [];
+        $passwordForm = new ChangePasswordForm();
+        $passwordForm->load(\Yii::$app->request->post(), 'User');
+
+        if ($passwordForm->validate() && $passwordForm->changePassword()) {
+            return [
+              'name'    => 'Success',
+              'message' => 'Change password success.',
+              'code'    => ApiCode::CHANGE_PASSWORD_SUCCESS,
+              'status'  => 200
+            ];
+        }
+        throw new BetterHttpException(400, 'Change password failed', ['User' => $passwordForm->getErrors()], ApiCode::CHANGE_PASSWORD_FAILED);
     }
 }

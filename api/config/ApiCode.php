@@ -19,6 +19,8 @@ class ApiCode extends Object
     const RESET_PASSWORD_TOKEN_INVALID = 17;
     const RESET_PASSWORD_SUCCESS       = 18;
     const RESET_PASSWORD_TOKEN_VALID   = 19;
+    const CHANGE_PASSWORD_SUCCESS      = 20;
+    const CHANGE_PASSWORD_FAILED       = 21;
 
 
     /**

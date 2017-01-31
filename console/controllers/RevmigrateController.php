@@ -41,15 +41,15 @@ class RevmigrateController extends Controller
     /**
      * This command creates a migration file for selected DB table.
      *
-     * @param $table_name - name of the table
+     * @param $tableName - name of the table
      */
-    public function actionTable($table_name = null)
+    public function actionTable($tableName = null)
     {
-        if (!$this->confirm('Create migration file for table ' . $table_name . '?')) {
+        if (!$this->confirm('Create migration file for table ' . $tableName . '?')) {
             return;
         }
 
-        $table = Yii::$app->db->schema->getTableSchema($table_name);
+        $table = Yii::$app->db->schema->getTableSchema($tableName);
 
         $this->createMigration($table);
     }
@@ -62,52 +62,74 @@ class RevmigrateController extends Controller
     private function createMigration($table)
     {
         // Prefix for created filename.
-        $prefix = 'm' . date('ymd_His', time());
+        $prefix = 'm' . date('ymd_His', time()) . '_create_table_';
 
-        // Array of unique keys.
-        // $uniqueKeys = $this->getUniqueKeys($table);
-        $uniqueKeys = [];
+        // Original tablename.
+        $oriTablename = $this->getOriTablename($table->name);
+
+        // Array of columns with unique key.
+        $uniqueCols = $this->getUniqueCols($table);
         
         // Array of fields.
         $fields = array();
 
         if (property_exists($table, 'columns')) {
             foreach ($table->columns as $column) {
-                $fields[] = [ 'property' => $column->name, 'decorators' => $this->buildColumnSchema($column, $uniqueKeys)];
+                $fields[] = [ 'property' => $column->name, 'decorators' => $this->buildColumnSchema($column, $uniqueCols)];
             }
         }
 
-        $params = array('table' => "{{%{$table->name}}}", 'className' => "{$prefix}_" . $table->name, 'fields' => $fields, 'foreignKeys' => array());
+        $params = array('table' => "{{%{$oriTablename}}}", 'className' => $prefix . $oriTablename, 'fields' => $fields, 'foreignKeys' => array());
 
         $tpl = $this->renderFile(Yii::getAlias('@yii/views/createTableMigration.php'), $params);
 
-        file_put_contents(Yii::getAlias('@app/migrations')."/{$prefix}_".$table->name.'.php', $tpl);
+        file_put_contents(Yii::getAlias('@app/migrations')."/{$prefix}".$oriTablename.'.php', $tpl);
     }
 
     /**
-     * Method for getting unique keys for every DB table.
+     * Method for getting original tablename if using tablePrefix.
+     *
+     * @param $tableName - name of the table
+     */
+    private function getOriTablename($tableName)
+    {
+        $prefix = Yii::$app->db->tablePrefix;
+
+        if (substr($tableName, 0, strlen($prefix)) == $prefix) {
+            return substr($tableName, strlen($prefix));
+        }
+
+        return $tableName;
+    }
+
+    /**
+     * Method for getting columns with unique key for every DB table.
      *
      * @param $table - the table metadata
      */
-    private function getUniqueKeys($table)
+    private function getUniqueCols($table)
     {
-        $dbSchema = null;
+        $uniqueKeys = Yii::$app->db->schema->findUniqueIndexes($table);
+
+        $uniqueCols = [];
         
-        switch (\Yii::$app->db->driverName) {
-            case 'mysql':
-                $dbSchema = new \yii\db\mysql\Schema();
+        foreach ($uniqueKeys as $name) {
+            foreach ($name as $col) {
+                $uniqueCols[] = $col;
+            }
         }
 
-        return $dbSchema->findUniqueIndexes($table);
+        return $uniqueCols;
     }
 
     /**
      * Method for generating string with Yii2 schema builder methods based on column description.
      *
      * @param $column - the column metadata
+     * @param $uniqueCols - columns with unique key
      * @return string
      */
-    private function buildColumnSchema($column, $uniqueKeys)
+    private function buildColumnSchema($column, $uniqueCols)
     {
         $result = '';
 
@@ -184,11 +206,9 @@ class RevmigrateController extends Controller
             }
         }
 
-        // if ($uniqueKeys !== null) {
-        if (in_array($column->name, $uniqueKeys, true)) {
+        if (in_array($column->name, $uniqueCols, true)) {
             $result .= '->unique()';
         }
-        // }
         if ($column->unsigned == true) {
             $result .= '->unsigned()';
         }

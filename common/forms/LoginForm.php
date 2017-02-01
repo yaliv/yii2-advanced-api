@@ -4,6 +4,7 @@ namespace common\forms;
 
 use common\models\User;
 use yii\base\Model;
+use yii\validators\EmailValidator;
 
 /**
  * Class LoginForm
@@ -12,133 +13,130 @@ use yii\base\Model;
  */
 class LoginForm extends Model
 {
-
-    const SCENARIO_SUBMIT_LOGIN_USERNAME = 'submitLoginUsername';
-    const SCENARIO_SUBMIT_LOGIN_EMAIL    = 'submitLoginEmail';
-
-    const LOGIN_WITH_EMAIL    = 'email';
-    const LOGIN_WITH_USERNAME = 'username';
-    const LOGIN_WITH_BOTH     = 'both';
-
-    /**
-     * @var
-     */
-    public $email;
-
-    /**
-     * @var
-     */
+    /** @var string */
     public $username;
-
-    /**
-     * @var
-     */
+    /** @var string */
     public $password;
-
-
-    /**
-     * @var User
-     */
-    protected $_user;
 
     /** @var string */
     protected $_userClass;
+    /** @var User */
+    protected $_user;
 
     public function __construct(array $config = [])
     {
+        // set default user class to common user
         $this->_userClass = User::className();
 
         parent::__construct($config);
     }
 
-
     public function rules()
     {
         return [
-            [['email', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
-            [['username', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-            [['email', 'password', 'username'], 'trim'],
-            ['email', 'email'],
-            [
-                'email',
-                'exist',
-                'targetClass' => $this->_userClass,
-                'on'          => self::SCENARIO_SUBMIT_LOGIN_EMAIL,
-                'message'     => 'Email does not exist'
-            ],
-            [
-                'username',
-                'exist',
-                'targetClass' => $this->_userClass,
-                'on'          => self::SCENARIO_SUBMIT_LOGIN_USERNAME,
-                'message'     => 'User does not exist'
-            ],
-            ['email', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
-            ['username', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-            ['password', 'validatePassword']
+            [['username', 'password'], 'required'],
+            [['username', 'password'], 'trim'],
+            [['username'], 'validateExist'],
+            [['password'], 'validatePassword'],
+            [['username'], 'validateActive']
         ];
     }
 
-    public function validatePassword($attribute, $params)
-    {
-        if (!$this->hasErrors()) {
-            if (!$this->getUser()->validatePassword($this->{$attribute})) {
-                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username';
-                $this->addError($attribute, 'Incorrect ' . $field . ' or password.');
-            }
-        }
-    }
-
-    public function validateActive($attribute, $params)
-    {
-        if (!$this->hasErrors()) {
-            if ($this->getUser()->status !== User::STATUS_ACTIVE) {
-                $field = ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_EMAIL) ? 'email' : 'username';
-                $this->addError($attribute, 'User ' . $field . ' is being suspended');
-            }
-        }
-    }
-
-    public function scenarios()
-    {
-        $scenarios                                       = parent::scenarios();
-        $scenarios[self::SCENARIO_SUBMIT_LOGIN_EMAIL]    = ['email', 'password'];
-        $scenarios[self::SCENARIO_SUBMIT_LOGIN_USERNAME] = ['username', 'password'];
-
-        return $scenarios;
-    }
-
+    /**
+     * Setter method
+     *
+     * @param $userClass
+     */
     public function setUserClass($userClass)
     {
         $this->_userClass = $userClass;
     }
 
     /**
-     * Login and setup a new device
+     * Validate whether the username exists or not. We do not use core validator
+     * because we need to distinguish between username or email based on the input
+     * of the user. Therefore, we use the getUser if we can return the existing
+     * user or not.
      *
+     * @param $attribute
+     * @param $params
+     */
+    public function validateExist($attribute, $params)
+    {
+        if ($this->getUser() === null) {
+            $this->addError($attribute, 'User ' . $this->{$attribute} . ' is not found.');
+        }
+    }
+
+    /**
+     * This validation will only be processed if there is no error before it
+     *
+     * @author Haqqi <me@haqqi.net>
+     * @since 0.1.0
+     * @param $attribute
+     * @param $params
+     */
+    public function validatePassword($attribute, $params)
+    {
+        if (!$this->hasErrors()) {
+            if (!$this->getUser()->validatePassword($this->{$attribute})) {
+                $this->addError($attribute, 'Incorrect username/email or password.');
+            }
+        }
+    }
+
+    /**
+     * This validation will only be processed if there is no error before it
+     *
+     * @author Haqqi <me@haqqi.net>
+     * @since 0.1.0
+     * @param $attribute
+     * @param $params
+     */
+    public function validateActive($attribute, $params)
+    {
+        if (!$this->hasErrors()) {
+            if ($this->getUser()->status !== User::STATUS_ACTIVE) {
+                $this->addError($attribute, 'User ' . $this->{$attribute} . ' is being suspended');
+            }
+        }
+    }
+
+    /**
+     * Process the login through Yii2 system
+     *
+     * @author Haqqi <me@haqqi.net>
+     * @since 0.1.0
      * @return bool
      */
     public function login()
     {
         if ($this->validate()) {
-            // login to Yii2 system
-            // @todo: implement this in backend
-            return \Yii::$app->user->login($this->getUser());
+            return \Yii::$app->user->login($this->$this->getUser());
         }
         return false;
     }
 
     /**
-     * @return User|null
+     * Get the user based on the class
+     *
+     * @author Haqqi <me@haqqi.net>
+     * @since 0.1.0
+     * @return User
      */
     protected function getUser()
     {
         if ($this->_user === null) {
             $class = $this->_userClass;
-            if ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME) {
-                $this->_user = $class::findByUsername($this->username);
+
+            // must check wheter it is email or username
+            $emailValidator = new EmailValidator();
+
+            // if it is email, find user by email
+            if ($emailValidator->validate($this->username)) {
+                $this->_user = $class::findOne(['email' => $this->username]);
             } else {
-                $this->_user = $class::findByEmail($this->email);
+                $this->_user = $class::findOne(['username' => $this->username]);
             }
         }
 

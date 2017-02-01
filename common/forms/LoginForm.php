@@ -55,27 +55,27 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-          [['email', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
-          [['username', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-          [['email', 'password', 'username'], 'trim'],
-          ['email', 'email'],
-          [
-            'email',
-            'exist',
-            'targetClass' => $this->_userClass,
-            'on'          => self::SCENARIO_SUBMIT_LOGIN_EMAIL,
-            'message'     => 'Email does not exist'
-          ],
-          [
-            'username',
-            'exist',
-            'targetClass' => $this->_userClass,
-            'on'          => self::SCENARIO_SUBMIT_LOGIN_USERNAME,
-            'message'     => 'User does not exist'
-          ],
-          ['email', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
-          ['username', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
-          ['password', 'validatePassword']
+            [['email', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
+            [['username', 'password'], 'required', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
+            [['email', 'password', 'username'], 'trim'],
+            ['email', 'email'],
+            [
+                'email',
+                'exist',
+                'targetClass' => $this->_userClass,
+                'on'          => self::SCENARIO_SUBMIT_LOGIN_EMAIL,
+                'message'     => 'Email does not exist'
+            ],
+            [
+                'username',
+                'exist',
+                'targetClass' => $this->_userClass,
+                'on'          => self::SCENARIO_SUBMIT_LOGIN_USERNAME,
+                'message'     => 'User does not exist'
+            ],
+            ['email', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_EMAIL],
+            ['username', 'validateActive', 'on' => self::SCENARIO_SUBMIT_LOGIN_USERNAME],
+            ['password', 'validatePassword']
         ];
     }
 
@@ -136,10 +136,10 @@ class LoginForm extends Model
         if ($this->_user === null) {
             $class = $this->_userClass;
             if ($this->scenario === self::SCENARIO_SUBMIT_LOGIN_USERNAME) {
-                return $class::findByUsername($this->username);
+                $this->_user = $class::findByUsername($this->username);
+            } else {
+                $this->_user = $class::findByEmail($this->email);
             }
-
-            return $class::findByEmail($this->email);
         }
 
         return $this->_user;

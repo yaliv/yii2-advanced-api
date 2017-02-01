@@ -3,8 +3,11 @@
 namespace common\forms;
 
 use common\models\User;
+use yii\base\InvalidConfigException;
 use yii\base\Model;
+use yii\helpers\ArrayHelper;
 use yii\validators\EmailValidator;
+use yii\web\IdentityInterface;
 
 /**
  * Class LoginForm
@@ -13,6 +16,10 @@ use yii\validators\EmailValidator;
  */
 class LoginForm extends Model
 {
+    const LOGIN_WITH_EMAIL    = 'email';
+    const LOGIN_WITH_USERNAME = 'username';
+    const LOGIN_WITH_BOTH     = 'both';
+
     /** @var string */
     public $username;
     /** @var string */
@@ -23,10 +30,17 @@ class LoginForm extends Model
     /** @var User */
     protected $_user;
 
+    private $_loginWith;
+
     public function __construct(array $config = [])
     {
         // set default user class to common user
         $this->_userClass = User::className();
+
+        // set loginWith through params
+        $this->_loginWith = ArrayHelper::getValue(
+            \Yii::$app->params, 'auth.loginWith', self::LOGIN_WITH_BOTH
+        );
 
         parent::__construct($config);
     }
@@ -118,6 +132,32 @@ class LoginForm extends Model
     }
 
     /**
+     * Get login column based on the config params
+     *
+     * @return string
+     * @throws InvalidConfigException
+     */
+    protected function getLoginColumn()
+    {
+        if ($this->_loginWith == self::LOGIN_WITH_BOTH) {
+            // check if it is email or not using email validator
+            $emailValidator = new EmailValidator();
+
+            if ($emailValidator->validate($this->username)) {
+                return 'email';
+            } else {
+                return 'username';
+            }
+        } elseif ($this->_loginWith == self::LOGIN_WITH_USERNAME) {
+            return 'username';
+        } elseif ($this->_loginWith == self::LOGIN_WITH_EMAIL) {
+            return 'email';
+        } else {
+            throw new InvalidConfigException('auth.LoginWith param is not using supported method.');
+        }
+    }
+
+    /**
      * Get the user based on the class
      *
      * @author Haqqi <me@haqqi.net>
@@ -127,16 +167,15 @@ class LoginForm extends Model
     protected function getUser()
     {
         if ($this->_user === null) {
+            // IdentityInterface class
             $class = $this->_userClass;
+            // login column
+            $loginColumn = $this->getLoginColumn();
 
-            // must check wheter it is email or username
-            $emailValidator = new EmailValidator();
+            $this->_user = $class::findOne([$loginColumn => $this->username]);
 
-            // if it is email, find user by email
-            if ($emailValidator->validate($this->username)) {
-                $this->_user = $class::findOne(['email' => $this->username]);
-            } else {
-                $this->_user = $class::findOne(['username' => $this->username]);
+            if (!($this->_user instanceof IdentityInterface)) {
+                throw new InvalidConfigException('User class must implement IdentityInterface');
             }
         }
 

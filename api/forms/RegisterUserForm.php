@@ -5,6 +5,7 @@ namespace api\forms;
 
 
 use common\models\User;
+use kartik\password\StrengthValidator;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\helpers\ArrayHelper;
@@ -31,8 +32,9 @@ class RegisterUserForm extends Model
           [['username', 'email', 'password'], 'required'],
           [['username', 'email', 'password'], 'trim'],
           ['email', 'email'],
-          [['username', 'email'], 'unique', 'targetClass' => User::className()]
-        ], User::getPasswordRules());
+          [['username', 'email'], 'unique', 'targetClass' => User::className()],
+          [['password'], StrengthValidator::className(), 'preset' => \Yii::$app->params['strongPassword']]
+        ],User::getPasswordRules());
     }
 
     public function register()

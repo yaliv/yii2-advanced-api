@@ -39,15 +39,12 @@ return [
             ],
         ],
         'errorHandler' => [
-            'class' => common\components\ErrorHandler::className(),
+            'class' => api\components\ErrorHandler::className(),
         ],
         'urlManager'   => [
             // to improve the security
             'enableStrictParsing' => true
         ],
-        'response' => [
-            'format' => yii\web\Response::FORMAT_JSON
-        ]
     ],
     'params'              => $params,
 ];

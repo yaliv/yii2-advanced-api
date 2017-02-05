@@ -98,14 +98,6 @@ class AuthController extends Controller
             throw new HttpException(400, $e->getMessage(), ApiCode::DEVICE_IDENTIFIER_NOT_FOUND);
         }
 
-        $loginByEmail = \Yii::$app->params['loginByEmail'];
-
-        if ($loginByEmail) {
-            $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_EMAIL);
-        } else {
-            $loginForm->setScenario(LoginForm::SCENARIO_SUBMIT_LOGIN_USERNAME);
-        }
-
         $loginForm->load(\Yii::$app->request->post(), 'User');
 
         /*
@@ -117,7 +109,20 @@ class AuthController extends Controller
              */
             $user = \Yii::$app->user->getIdentity();
 
-            $msgLoginBy = $loginByEmail ? 'email ' . $user->email : 'username ' . $user->username;
+            $msgLoginBy = '';
+            $loginColumn = $loginForm->getLoginColumn();
+
+            switch ($loginColumn) {
+                case 'username':
+                    $msgLoginBy = 'username ' . $user->username;
+                    break;
+                case 'email':
+                    $msgLoginBy = 'email ' . $user->email;
+                    break;
+                default:
+                    $msgLoginBy = $loginColumn;
+                    break;
+            }
 
             return [
                 'name'    => 'Success',
@@ -226,7 +231,6 @@ class AuthController extends Controller
 
         // this will catch POST request
         if (\Yii::$app->request->isPost) {
-
             $passwordForm->load(\Yii::$app->request->post(), 'User');
 
             if ($passwordForm->validate() && $passwordForm->resetPassword()) {

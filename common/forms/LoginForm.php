@@ -134,6 +134,7 @@ class LoginForm extends Model
     /**
      * Get login column based on the config params
      *
+     * @since 0.1.0
      * @return string
      * @throws InvalidConfigException
      */
@@ -163,6 +164,7 @@ class LoginForm extends Model
      * @author Haqqi <me@haqqi.net>
      * @since 0.1.0
      * @return User
+     * @throws InvalidConfigException if the userClass is not implement Identity Interface
      */
     protected function getUser()
     {

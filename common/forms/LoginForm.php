@@ -175,10 +175,7 @@ class LoginForm extends Model
             $loginColumn = $this->getLoginColumn();
 
             $this->_user = $class::findOne([$loginColumn => $this->username]);
-
-            if (!($this->_user instanceof IdentityInterface)) {
-                throw new InvalidConfigException('User class must implement IdentityInterface');
-            }
+            
         }
 
         return $this->_user;

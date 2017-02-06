@@ -54,20 +54,4 @@ class LoginForm extends \common\forms\LoginForm
         }
         return false;
     }
-
-    /**
-     * This class permits its instance to get the login column.
-     *
-     * @author Muhammad Yahya Muhaimin <myahyamuhaimin@yahoo.com>
-     */
-    public function getLoginColumn()
-    {
-        try {
-            $loginColumn = parent::getLoginColumn();
-        } catch (InvalidConfigException $e) {
-            return $e->getMessage();
-        }
-
-        return $loginColumn;
-    }
 }

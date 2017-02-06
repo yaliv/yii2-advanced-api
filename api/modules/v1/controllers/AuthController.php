@@ -109,24 +109,9 @@ class AuthController extends Controller
              */
             $user = \Yii::$app->user->getIdentity();
 
-            $msgLoginBy = '';
-            $loginColumn = $loginForm->getLoginColumn();
-
-            switch ($loginColumn) {
-                case 'username':
-                    $msgLoginBy = 'username ' . $user->username;
-                    break;
-                case 'email':
-                    $msgLoginBy = 'email ' . $user->email;
-                    break;
-                default:
-                    $msgLoginBy = $loginColumn;
-                    break;
-            }
-
             return [
                 'name'    => 'Success',
-                'message' => 'Login by ' . $msgLoginBy . ' success.',
+                'message' => 'Login by ' . $loginForm->loginColumn . ' success.',
                 'code'    => ApiCode::LOGIN_SUCCESS,
                 'status'  => 200,
                 'data'    => $user->toArray([

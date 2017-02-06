@@ -5,7 +5,8 @@
     "homepage": "http://www.yiiframework.com/",
     "type": "project",
     "license": "BSD-3-Clause",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "oomphinc/composer-installers-extender": "*",
         "php": ">=5.4.0",
@@ -22,7 +23,8 @@
         "firephp/firephp-core": "dev-master",
 
         "codeception/base": "^2.2.3",
-        "codeception/verify": "~0.3.1"
+        "codeception/verify": "~0.3.1",
+        "codeception/codeception": "*"
     },
     "repositories": [
         {

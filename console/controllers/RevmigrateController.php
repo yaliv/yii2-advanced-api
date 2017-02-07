@@ -6,6 +6,7 @@
  *
  * @copyright Copyright (c) 2017 Muhammad Yahya Muhaimin
  */
+
 namespace console\controllers;
 
 use Yii;
@@ -34,7 +35,11 @@ class RevmigrateController extends Controller
         $tables = Yii::$app->db->schema->getTableSchemas();
 
         foreach ($tables as $table) {
-            $this->createMigration($table);
+            $this->createSchemaMigration($table);
+        }
+
+        foreach ($tables as $table) {
+            $this->createFKMigration($table);
         }
     }
 
@@ -51,15 +56,17 @@ class RevmigrateController extends Controller
 
         $table = Yii::$app->db->schema->getTableSchema($tableName);
 
-        $this->createMigration($table);
+        $this->createSchemaMigration($table);
+
+        $this->createFKMigration($table);
     }
 
     /**
-     * Method for creating migration file for every DB table.
+     * Method for creating schema migration file for every DB table.
      *
      * @param $table - the table metadata
      */
-    private function createMigration($table)
+    private function createSchemaMigration($table)
     {
         // Prefix for created filename.
         $prefix = 'm' . date('ymd_His', time()) . '_create_table_';
@@ -69,14 +76,16 @@ class RevmigrateController extends Controller
 
         // Array of columns with unique key.
         $uniqueCols = $this->getUniqueCols($table);
-        
+
         // Array of fields.
         $fields = array();
 
-        if (property_exists($table, 'columns')) {
+        if (property_exists($table, 'columns') && count($table->columns)) {
             foreach ($table->columns as $column) {
-                $fields[] = [ 'property' => $column->name, 'decorators' => $this->buildColumnSchema($column, $uniqueCols)];
+                $fields[] = ['property' => $column->name, 'decorators' => $this->buildColumnSchema($column, $uniqueCols)];
             }
+        } else {
+            return;
         }
 
         $params = array('table' => "{{%{$oriTablename}}}", 'className' => $prefix . $oriTablename, 'fields' => $fields, 'foreignKeys' => array());
@@ -87,9 +96,56 @@ class RevmigrateController extends Controller
     }
 
     /**
+     * Method for creating foreign keys migration file for every DB table.
+     *
+     * @param $table - the table metadata
+     */
+    private function createFKMigration($table)
+    {
+        // Prefix for created filename.
+        $prefix = 'm' . date('ymd_His', time()+1) . '_add_fk_';
+
+        // Original tablename.
+        $oriTablename = $this->getOriTablename($table->name);
+
+        // Array of foreign keys.
+        $foreignKeys = array();
+
+        if (property_exists($table, 'foreignKeys') && count($table->foreignKeys)) {
+            foreach ($table->foreignKeys as $key) {
+                $col = '';
+                $fkData = [];
+
+                foreach ($key as $fk => $pk) {
+                    if ($fk === 0) {
+                        $oriRelTablename = $this->getOriTablename($pk);
+                        $fkData['relatedTable'] = "{{%{$oriRelTablename}}}";
+                        $fkData['idx'] = 'fk_'.$oriTablename."_{$oriRelTablename}";
+                        $fkData['fk'] = 'fk_'.$oriTablename."_{$oriRelTablename}";
+                    } else {
+                        $col = $fk;
+                    }
+                }
+
+                $foreignKeys[$col] = $fkData;
+            }
+        } else {
+            return;
+        }
+
+        $params = array('table' => "{{%{$oriTablename}}}", 'className' => $prefix . $oriTablename, 'fields' => array(), 'foreignKeys' => $foreignKeys);
+
+        $tpl = $this->renderFile(Yii::getAlias('@yii/views/createTableMigration.php'), $params);
+
+        file_put_contents(Yii::getAlias('@app/migrations')."/{$prefix}".$oriTablename.'.php', $tpl);
+    }
+
+    /**
      * Method for getting original tablename if using tablePrefix.
      *
      * @param $tableName - name of the table
+     *
+     * @return string original tablename (prefix is omitted)
      */
     private function getOriTablename($tableName)
     {
@@ -106,13 +162,15 @@ class RevmigrateController extends Controller
      * Method for getting columns with unique key for every DB table.
      *
      * @param $table - the table metadata
+     *
+     * @return array columns with unique key
      */
     private function getUniqueCols($table)
     {
         $uniqueKeys = Yii::$app->db->schema->findUniqueIndexes($table);
 
         $uniqueCols = [];
-        
+
         foreach ($uniqueKeys as $name) {
             foreach ($name as $col) {
                 $uniqueCols[] = $col;
@@ -123,11 +181,12 @@ class RevmigrateController extends Controller
     }
 
     /**
-     * Method for generating string with Yii2 schema builder methods based on column description.
+     * Method for generating string containing Yii2 schema builder methods based on column description.
      *
      * @param $column - the column metadata
      * @param $uniqueCols - columns with unique key
-     * @return string
+     *
+     * @return string containing schema builder methods
      */
     private function buildColumnSchema($column, $uniqueCols)
     {
@@ -162,7 +221,7 @@ class RevmigrateController extends Controller
                     $result .= "string({$length})";
                     break;
                 case SCHEMA::TYPE_TEXT:
-                    $result .= "text()";
+                    $result .= 'text()';
                     break;
                 case SCHEMA::TYPE_SMALLINT:
                     $result .= "smallInteger({$length})";
@@ -192,13 +251,13 @@ class RevmigrateController extends Controller
                     $result .= "time({$precision})";
                     break;
                 case SCHEMA::TYPE_DATE:
-                    $result .= "date()";
+                    $result .= 'date()';
                     break;
                 case SCHEMA::TYPE_BINARY:
                     $result .= "binary({$length})";
                     break;
                 case SCHEMA::TYPE_BOOLEAN:
-                    $result .= "boolean()";
+                    $result .= 'boolean()';
                     break;
                 case SCHEMA::TYPE_MONEY:
                     $result .= "money({$precision}, {$scale})";

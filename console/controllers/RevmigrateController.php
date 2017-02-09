@@ -112,22 +112,52 @@ class RevmigrateController extends Controller
         $foreignKeys = array();
 
         if (property_exists($table, 'foreignKeys') && count($table->foreignKeys)) {
-            foreach ($table->foreignKeys as $key) {
-                $col = '';
-                $fkData = [];
+            // Handles different Yii versions.
+            switch (Yii::getVersion()) {
+                case '2.0.10':
+                    foreach ($table->foreignKeys as $key) {
+                        $col = '';
+                        $fkData = [];
 
-                foreach ($key as $fk => $pk) {
-                    if ($fk === 0) {
-                        $oriRelTablename = $this->getOriTablename($pk);
-                        $fkData['relatedTable'] = "{{%{$oriRelTablename}}}";
-                        $fkData['idx'] = 'fk_'.$oriTablename."_{$oriRelTablename}";
-                        $fkData['fk'] = 'fk_'.$oriTablename."_{$oriRelTablename}";
-                    } else {
-                        $col = $fk;
+                        foreach ($key as $fk => $pk) {
+                            if ($fk === 0) {
+                                $oriRelTablename = $this->getOriTablename($pk);
+
+                                $fkData['relatedTable'] = "{{%{$oriRelTablename}}}";
+                                $fkData['idx'] = 'fk_'.$oriTablename."_{$oriRelTablename}_idx";
+                                $fkData['fk'] = 'fk_'.$oriTablename."_{$oriRelTablename}";
+                            } else {
+                                $col = $fk;
+                            }
+                        }
+
+                        $foreignKeys[$col] = $fkData;
                     }
-                }
 
-                $foreignKeys[$col] = $fkData;
+                    break;
+
+                default:
+                    foreach ($table->foreignKeys as $key => $arr) {
+                        $col = '';
+                        $fkData = [];
+
+                        foreach ($arr as $fk => $pk) {
+                            if ($fk === 0) {
+                                $oriRelTablename = $this->getOriTablename($pk);
+
+                                $fkData['relatedTable'] = "{{%{$oriRelTablename}}}";
+                                $fkData['idx'] = $key.'_idx';
+                                $fkData['fk'] = $key;
+                            } else {
+                                $col = $fk;
+                                $fkData['relatedColumn'] = $pk;
+                            }
+                        }
+
+                        $foreignKeys[$col] = $fkData;
+                    }
+
+                    break;
             }
         } else {
             return;

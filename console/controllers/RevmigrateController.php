@@ -304,7 +304,7 @@ class RevmigrateController extends Controller
         if ($column->allowNull != true) {
             $result .= '->notNull()';
         }
-        if ($column->defaultValue != '') {
+        if (isset($column->defaultValue)) {
             $result .= "->defaultValue('{$column->defaultValue}')";
         }
         if ($column->comment != '') {

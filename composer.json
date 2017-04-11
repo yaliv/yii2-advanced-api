@@ -8,7 +8,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "oomphinc/composer-installers-extender": "*",
         "php": ">=5.4.0",
         "yiisoft/yii2": "~2.0.11",
         "yiisoft/yii2-bootstrap": "~2.0.2",
@@ -34,13 +33,6 @@
     ],
     "config": {
         "process-timeout": 1800
-    },
-    "extra": {
-        "installer-types": ["library"],
-        "installer-paths": {
-            "vendor/bower/{$name}/": ["vendor:bower-asset"],
-            "vendor/npm/{$name}/": ["vendor:npm-asset"]
-        }
     },
     "scripts": {
         "post-install-cmd": "php init --env=Development --overwrite=n"

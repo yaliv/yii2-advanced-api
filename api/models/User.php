@@ -2,28 +2,55 @@
 
 namespace api\models;
 
-use common\models\Device;
 use yii\base\InvalidConfigException;
 
+/**
+ * Class User
+ *
+ * @author Haqqi <me@haqqi.net>
+ * @package api\models
+ * 
+ * @var Device $activeDevice
+ */
 class User extends \common\models\User
 {
+    ///////////////////////
+    // Relationship Area //
+    ///////////////////////
 
-    /**
-     * @var Device
-     */
-    private $_activeDevice;
-
-    public function extraFields() {
-        $extra = parent::extraFields();
-
-        $extra['activeDevice'] = function () {
-            return $this->getActiveDevice()->toArray([
-              'accessToken'
-            ]);
-        };
-
-        return $extra;
+    public function getDevices()
+    {
+        return $this->hasMany(Device::className(), ['userId' => 'id'])
+            ->inverseOf('user');
     }
+
+    /////////////////////////////
+    // Identity Interface Area //
+    /////////////////////////////
+
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+        $activeDevice = Device::find()
+            ->joinWith(['user'])
+            ->where([
+                Device::tableName() . '.accessToken' => $token,
+                Device::tableName() . '.status'      => Device::STATUS_ACTIVE,
+                self::tableName() . '.status'        => self::STATUS_ACTIVE
+            ])->one();
+
+        if ($activeDevice) {
+            /** @var User $user */
+            $user = $activeDevice->user;
+            $user->setActiveDevice($activeDevice);
+
+            return $user;
+        }
+
+        return null;
+    }
+    ///////////////////////////////
+    // End of Identity Interface //
+    ///////////////////////////////
 
     /**
      * Setup a new device after login
@@ -46,6 +73,11 @@ class User extends \common\models\User
         $this->_activeDevice = $device;
     }
 
+    /**
+     * @var Device
+     */
+    private $_activeDevice;
+
     public function getActiveDevice()
     {
         return $this->_activeDevice;
@@ -55,46 +87,4 @@ class User extends \common\models\User
     {
         $this->_activeDevice = $activeDevice;
     }
-
-    ///////////////////////
-    // Relationship Area //
-    ///////////////////////
-
-
-    /////////////////////////////
-    // Identity Interface Area //
-    /////////////////////////////
-
-    /**
-     * Find identity by access token, used in API
-     *
-     * @param mixed $token
-     * @param null $type
-     */
-    public static function findIdentityByAccessToken($token, $type = null)
-    {
-        // find user by accessToken
-        $user = User::find()
-            ->where([
-                self::tableName() . '.status' => self::STATUS_ACTIVE
-            ])
-            ->joinWith([
-                'devices' => function ($query) use ($token) {
-                    $query->andWhere([
-                        Device::tableName() . '.accessToken' => $token,
-                        Device::tableName() . '.status'      => Device::STATUS_ACTIVE
-                    ]);
-                }
-            ], true)
-            ->one();
-
-        if ($user) {
-            $user->activeDevice = $user->devices[0];
-        }
-
-        return $user;
-    }
-    ///////////////////////////////
-    // End of Identity Interface //
-    ///////////////////////////////
 }

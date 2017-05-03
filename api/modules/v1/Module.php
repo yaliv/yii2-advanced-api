@@ -2,9 +2,9 @@
 
 namespace api\modules\v1;
 
-use api\filters\AccessTokenAuth;
 use yii\base\BootstrapInterface;
 use yii\filters\auth\CompositeAuth;
+use yii\filters\auth\HttpBearerAuth;
 
 /**
  * Class Module
@@ -29,17 +29,11 @@ class Module extends \yii\base\Module implements BootstrapInterface
             false
         );
 
-        // custom access token auth can be customized here
-        /** @author Haqqi <me@haqqi.net> */
-        \Yii::$container->set(AccessTokenAuth::className(), [
-            'accessTokenKey' => 'X-Device-accessToken'
-        ]);
-
         // set the auth method
         /** @author Haqqi <me@haqqi.net> */
         \Yii::$container->set(CompositeAuth::className(), [
             'authMethods' => [
-                AccessTokenAuth::className()
+                HttpBearerAuth::className()
             ]
         ]);
     }

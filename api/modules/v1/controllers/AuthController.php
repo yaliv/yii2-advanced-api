@@ -5,14 +5,16 @@ namespace api\modules\v1\controllers;
 use api\config\ApiCode;
 use api\forms\LoginForm;
 use api\forms\RegisterUserForm;
+use api\models\User;
+use api\models\Device;
 use common\exceptions\BetterHttpException;
 use common\forms\ChangePasswordForm;
 use common\forms\ForgotPasswordForm;
 use common\forms\ResetPasswordForm;
-use common\models\Device;
 use yii\base\InvalidConfigException;
 use yii\rest\Controller;
 use yii\web\HttpException;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class AuthController
@@ -114,14 +116,15 @@ class AuthController extends Controller
                 'message' => 'Login by ' . $loginForm->loginColumn . ' success.',
                 'code'    => ApiCode::LOGIN_SUCCESS,
                 'status'  => 200,
-                'data'    => $user->toArray([
-                    // main fields
-                    'hashId',
-                    'username',
-                    'email'
-                ], [
-                    // extra fields
-                    'activeDevice'
+                'data'    => ArrayHelper::toArray($user, [
+                    User::className() => [
+                        'username',
+                        'email',
+                        'activeDevice'
+                    ],
+                    Device::className() => [
+                        'accessToken',
+                    ]
                 ])
             ];
         } else {
